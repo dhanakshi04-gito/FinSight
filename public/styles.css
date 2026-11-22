@@ -1,0 +1,2254 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   styles.css — FinSight Analytics
+   Presentation layer only. Zero JavaScript coupling.
+   Author: FinSight Architecture Team
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   1. DESIGN SYSTEM — CSS CUSTOM PROPERTIES
+   All design tokens live here. Changing a single value cascades everywhere.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ── Colour Palette ──────────────────────────────────────────────────── */
+
+  /* Deep Navy: primary structural backgrounds (body, sidebar) */
+  --color-bg-primary: #0A1A3C;
+
+  /* Royal Blue: card / panel surfaces — lighter than the background to
+     create visual elevation without harsh shadows alone */
+  --color-bg-card: #143A75;
+
+  /* A translucent card variant used for subtle nested containers */
+  --color-bg-card-inner: rgba(20, 58, 117, 0.55);
+
+  /* Slightly lighter surface for hover & focus states on nav items */
+  --color-bg-hover: rgba(0, 229, 229, 0.08);
+
+  /* Primary accent: Bright Cyan — used for CTAs, active indicators, and
+     focus rings. High contrast against navy backgrounds (WCAG AA ≥ 4.5:1) */
+  --color-accent: #00E5E5;
+  --color-accent-dim: rgba(0, 229, 229, 0.18);
+  --color-accent-glow: rgba(0, 229, 229, 0.35);
+
+  /* Off-White: primary text colour ensuring maximum readability contrast
+     on deep navy backgrounds (contrast ratio > 12:1) */
+  --color-text: #F5F5F5;
+  --color-text-muted: rgba(245, 245, 245, 0.55);
+  --color-text-subtle: rgba(245, 245, 245, 0.35);
+
+  /* Danger / Electric Red: ONLY used for anomaly warnings, budget overruns.
+     Never used decoratively — preserves semantic signal clarity. */
+  --color-danger: #FF0028;
+  --color-danger-dim: rgba(255, 0, 40, 0.15);
+
+  /* Success green for positive financial signals (income, savings growth) */
+  --color-positive: #00C48C;
+  --color-positive-dim: rgba(0, 196, 140, 0.15);
+
+  /* Category dot colours used in the Budget Tracker */
+  --color-cat-food: #F59E0B;
+  --color-cat-housing: #8B5CF6;
+  --color-cat-transport: #3B82F6;
+  --color-cat-entertainment: #EC4899;
+
+  /* Borders: translucent accent tint creates cohesion without visual noise */
+  --color-border: rgba(0, 229, 229, 0.15);
+  --color-border-strong: rgba(0, 229, 229, 0.3);
+
+  /* ── Spacing Scale (T-shirt sizes, 4px base unit) ────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Radii ───────────────────────────────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  /* ── Shadows ─────────────────────────────────────────────────────────── */
+  /* Card elevation: a dark diffuse shadow + a subtle cyan rim light */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--color-border);
+  --shadow-focus: 0 0 0 3px var(--color-accent-glow);
+  --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+
+  /* ── Typography ─────────────────────────────────────────────────────── */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-xs: 0.75rem;
+  /* 12px */
+  --font-size-sm: 0.875rem;
+  /* 14px */
+  --font-size-md: 1rem;
+  /* 16px */
+  --font-size-lg: 1.125rem;
+  /* 18px */
+  --font-size-xl: 1.375rem;
+  /* 22px */
+  --font-size-2xl: 1.75rem;
+  /* 28px */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+
+  /* ── Transitions ─────────────────────────────────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+
+  /* ── Layout ──────────────────────────────────────────────────────────── */
+  --sidebar-width: 180px;
+  --header-height: auto;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   2. RESET & BASE
+   Minimal normalisation — keeps the authored intent clean.
+   ───────────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  /* ─── WHY CSS GRID HERE ────────────────────────────────────────────────
+     The body defines the macro dashboard structure:
+       sidebar | header
+       sidebar | main
+     This is a classic two-dimensional layout — rows AND columns must be
+     controlled simultaneously. Grid's grid-template-areas make the intent
+     explicit and self-documenting. Flexbox cannot name areas; a flex row
+     would require an extra wrapper <div> to achieve the sidebar+stacked-
+     content pattern. Grid is the right choice at this scale.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: grid;
+  grid-template-areas:
+    "sidebar header"
+    "sidebar main";
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  background-color: var(--color-bg-primary);
+  line-height: var(--line-height-normal);
+}
+
+/* Landing intro screen */
+.landing-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 229, 229, 0.18), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.14), transparent 45%),
+    var(--color-bg-primary);
+}
+
+.landing-screen--hidden {
+  display: none;
+}
+
+.landing-screen__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.landing-screen__logo {
+  width: min(38vh, 340px);
+  height: min(38vh, 340px);
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(0, 229, 229, 0.4);
+  box-shadow: 0 0 0 8px rgba(0, 229, 229, 0.14), 0 20px 80px rgba(0, 0, 0, 0.5);
+  animation: landingLogoIn 900ms ease-out both;
+}
+
+.landing-screen__title {
+  font-size: clamp(3.6rem, 11.5vw, 10rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: visible;
+  line-height: 1.08;
+  clip-path: inset(0 100% 0 0);
+  animation: landingType 1.2s steps(8, end) 700ms forwards;
+}
+
+.landing-screen__start {
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  padding: 18px 42px;
+  border-radius: var(--radius-pill);
+  opacity: 0;
+  transform: translateY(8px);
+  animation: landingBtnIn 500ms ease-out 2.1s forwards;
+  min-width: min(56vw, 340px);
+}
+
+@keyframes landingLogoIn {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes landingType {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes landingBtnIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Accessible screen-reader-only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   3. SIDEBAR
+   grid-area: sidebar — spans both rows (header + main) on the left column.
+   ───────────────────────────────────────────────────────────────────────── */
+#sidebar {
+  grid-area: sidebar;
+
+  /* Sticky: sidebar stays in viewport while main scrolls independently.
+     position:sticky + height:100vh achieves "fixed sidebar" without
+     removing the element from document flow (unlike position:fixed) — this
+     keeps the Grid layout intact and avoids z-index conflicts. */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+
+  background-color: var(--color-bg-primary);
+  border-right: 1px solid var(--color-border);
+
+  /* ─── WHY FLEXBOX INSIDE THE SIDEBAR ──────────────────────────────────
+     The sidebar contains three stacked elements: logo, nav list, footer.
+     This is purely one-dimensional (column direction). Flexbox is ideal
+     here — justify-content: space-between pushes footer to the bottom with
+     zero extra markup. No second dimension is needed, so Grid would be
+     overkill.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  /* Subtle gradient to differentiate from the main background */
+  background-image: linear-gradient(180deg,
+      rgba(0, 229, 229, 0.03) 0%,
+      transparent 40%);
+}
+
+/* Brand logo block */
+.sidebar__logo {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Two items side-by-side (icon + wordmark) with vertical centering.
+     Classic one-dimensional row alignment — Flexbox is the precise tool.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  padding: var(--space-6) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.sidebar__logo-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.sidebar__logo-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 229, 229, 0.35);
+  box-shadow: 0 0 0 3px rgba(0, 229, 229, 0.10);
+}
+
+.sidebar__logo-text {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--color-accent), #80f0f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Navigation list */
+.sidebar__nav-list {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     A purely vertical stack of nav links. Flexbox column direction with
+     a consistent gap gives us a clean list without needing margins on
+     individual <li> elements — easier to maintain.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  list-style: none;
+  padding: var(--space-4) var(--space-3);
+  flex: 1;
+  /* grows to push footer down */
+}
+
+.sidebar__nav-link {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Each nav link contains an SVG icon and a text span. Flexbox row with
+     align-items:center handles the icon/label pairing elegantly, with a
+     gap controlling spacing — avoids hardcoding icon margins.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.sidebar__nav-link:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+.sidebar__nav-link:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  color: var(--color-text);
+}
+
+/* Active nav link state */
+.sidebar__nav-item--active .sidebar__nav-link {
+  background-color: var(--color-accent-dim);
+  color: var(--color-accent);
+}
+
+.sidebar__nav-item--active .sidebar__nav-link .nav-icon {
+  color: var(--color-accent);
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: inherit;
+  transition: color var(--transition-fast);
+}
+
+/* Sidebar footer (Settings link) */
+.sidebar__footer {
+  padding: var(--space-4) var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.sidebar__nav-link--muted {
+  color: var(--color-text-subtle);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   4. HEADER
+   grid-area: header — top-right cell, hosts the metrics bar.
+   ───────────────────────────────────────────────────────────────────────── */
+#top-header {
+  grid-area: header;
+
+  padding: var(--space-6) var(--space-8);
+  background-color: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
+
+  /* Frosted glass effect — hints of the grid layout underneath */
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header__title-group {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Title and date are a one-dimensional row. Flexbox baseline alignment
+     keeps them neatly positioned without grid complexity.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.header__title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.header__date {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+/* Metrics bar — four KPI cards in a responsive row */
+.metrics-bar {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Four uniformly-sized metric cards laid out in a single row. This is
+     one-dimensional content distribution — Flexbox with flex:1 on each
+     card distributes available width equally and wraps naturally on smaller
+     screens. We don't need grid-template-columns here because the columns
+     are all equal-width siblings without independent row concerns.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* Individual KPI card */
+.metric-card {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Label, value, and delta are stacked vertically — a one-dimensional
+     column with a small gap. Flexbox column is the minimal, correct choice.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  flex: 1;
+  min-width: 160px;
+
+  padding: var(--space-5) var(--space-6);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--color-border-strong);
+}
+
+.metric-card__label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.metric-card__value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: var(--line-height-tight);
+}
+
+.metric-card__value--positive {
+  color: var(--color-accent);
+}
+
+.metric-card__value--neutral {
+  color: var(--color-text);
+}
+
+.metric-card__value--danger {
+  color: var(--color-danger);
+}
+
+.metric-card__delta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  font-weight: 500;
+  min-height: 1em;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   5. MAIN CONTENT AREA
+   grid-area: main — scrollable right-side content beneath the header.
+   ───────────────────────────────────────────────────────────────────────── */
+#main-content {
+  grid-area: main;
+
+  padding: var(--space-8);
+  overflow-y: auto;
+
+  /* Stacks all <section> children vertically with consistent spacing */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   6. DASHBOARD SECTION WRAPPER
+   Common wrapper applied to every <section> in main.
+   ───────────────────────────────────────────────────────────────────────── */
+.dashboard-section {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-card);
+}
+
+/* Section header: title + subtitle stacked, with optional side controls */
+.section-header {
+  margin-bottom: var(--space-6);
+}
+
+/* When the section header should have controls on the right side */
+.section-header--with-controls {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Title group on the left, controls on the right — a classic horizontal
+     space-between layout. Flexbox is built for this one-dimensional pattern.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-1);
+}
+
+.section-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   7. TRANSACTION ENTRY FORM
+   ───────────────────────────────────────────────────────────────────────── */
+.transaction-form {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     The form is a stack of rows and groups — purely one-dimensional.
+     Flexbox column arranges rows top-to-bottom with a consistent gap.
+     Each row internally uses a CSS Grid sub-layout (see .form-row below)
+     because rows need explicit column control — two-dimensional alignment.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ─── WHY CSS GRID FOR FORM ROWS ──────────────────────────────────────────
+   A form row places multiple fields side-by-side with equal column widths.
+   Grid's repeat(auto-fit, minmax()) enables responsive multi-column layouts
+   without media queries: fields wrap when space is insufficient.
+   Flexbox could achieve this with flex-wrap but cannot enforce consistent
+   column widths across rows (some rows have 2 fields, some have 3).
+   ─────────────────────────────────────────────────────────────────────── */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* two-column default */
+  gap: var(--space-4);
+}
+
+.form-row--three {
+  grid-template-columns: repeat(3, 1fr);
+  /* three equal columns */
+}
+
+/* An individual label + input pair — flexbox column for one-dimensional stack */
+.form-group {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Label sits above the input — a one-dimensional column stack. Each
+     .form-group is a self-contained vertical unit. Flexbox is correct.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* A form group that spans the full row width */
+.form-group--full {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.form-label__optional {
+  font-weight: 400;
+  color: var(--color-text-subtle);
+}
+
+/* Shared input/select styles */
+.form-input,
+.form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  transition: border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  box-shadow: var(--shadow-inset);
+}
+
+.form-input::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.form-input:hover,
+.form-select:hover {
+  border-color: var(--color-border-strong);
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Custom select arrow */
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300E5E5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-4) center;
+  padding-right: var(--space-10);
+}
+
+.form-select option,
+.form-select optgroup {
+  background-color: #0D2552;
+  color: var(--color-text);
+}
+
+/* Form action buttons row */
+.form-actions {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Two buttons side-by-side, pushed to the right end — classic flex row
+     with justify-content:flex-end. One-dimensional, Flexbox wins.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+/* Form feedback zone */
+.form-messages {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  min-height: 1.2em;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   8. BUTTONS
+   ───────────────────────────────────────────────────────────────────────── */
+.btn {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Buttons can contain an icon + text. Flexbox inline-flex centres both
+     the icon SVG and text label vertically with a gap — the cleanest way.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* Primary CTA — Bright Cyan fill, navy text, maximum visual prominence */
+.btn--primary {
+  background: var(--color-accent);
+  color: #0A1A3C;
+}
+
+.btn--primary:hover {
+  background: #1af0f0;
+  box-shadow: 0 4px 20px rgba(0, 229, 229, 0.4);
+}
+
+/* Secondary — ghost style with cyan border */
+.btn--secondary {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.btn--secondary:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+/* Ghost — minimal style for table/pagination controls */
+.btn--ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-4);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  color: var(--color-accent);
+}
+
+.btn--ghost:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn--sm {
+  font-size: var(--font-size-xs);
+  padding: var(--space-2) var(--space-3);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   9. CSV DRAG-AND-DROP UPLOAD ZONE
+   ───────────────────────────────────────────────────────────────────────── */
+.drop-zone {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     The drop zone centres an icon, a heading, and a hint text in a single
+     vertical column — a one-dimensional distribution problem. Flexbox column
+     with align-items:center is the simplest accurate solution.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+
+  padding: var(--space-12) var(--space-8);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-primary);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--transition-normal),
+    background-color var(--transition-normal);
+}
+
+.drop-zone:hover,
+.drop-zone:focus-within {
+  border-color: var(--color-accent);
+  background: var(--color-accent-dim);
+}
+
+/* When actively dragging a file over the zone (toggled by JS) */
+.drop-zone--active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-dim);
+  box-shadow: 0 0 0 4px var(--color-accent-glow);
+}
+
+.drop-zone__icon {
+  width: 56px;
+  height: 56px;
+  color: var(--color-accent);
+  opacity: 0.7;
+  transition: opacity var(--transition-fast), transform var(--transition-normal);
+}
+
+.drop-zone:hover .drop-zone__icon {
+  opacity: 1;
+  transform: translateY(-4px);
+}
+
+.drop-zone__primary-text {
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.drop-zone__or {
+  color: var(--color-text-subtle);
+  font-weight: 400;
+  margin: 0 var(--space-1);
+}
+
+.drop-zone__browse-cta {
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--transition-fast);
+}
+
+.drop-zone:hover .drop-zone__browse-cta {
+  text-decoration-color: var(--color-accent);
+}
+
+.drop-zone__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  line-height: var(--line-height-normal);
+}
+
+.drop-zone__hint strong {
+  color: var(--color-text-muted);
+}
+
+.drop-zone__hint code {
+  font-family: ui-monospace, 'Fira Code', monospace;
+  font-size: 0.7rem;
+  background: var(--color-bg-card);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+}
+
+/* The hidden native file input */
+.drop-zone__file-input {
+  display: none;
+}
+
+/* Upload status feedback */
+.upload-status {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+  min-height: 1.5em;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* Imported files panel (CSV section) */
+.imported-files {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card-inner);
+}
+
+.imported-files__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.imported-files__title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.imported-files__empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+  text-align: center;
+  padding: var(--space-2) 0;
+}
+
+.imported-files__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.imported-files__item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: rgba(10, 26, 60, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.imported-files__name {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.imported-files__meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   10. TABLE CONTROLS (Search + Filter)
+   ───────────────────────────────────────────────────────────────────────── */
+.table-controls {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Search input and category filter dropdown side-by-side. A simple,
+     one-dimensional row — Flexbox handles this with minimal code.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.search-wrapper {
+  position: relative;
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Overlaying a search icon inside an input field — position:absolute on
+     the icon. The wrapper uses flex just to give it stable dimensions.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-3);
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-subtle);
+  pointer-events: none;
+}
+
+.search-input {
+  padding-left: calc(var(--space-3) + 16px + var(--space-2));
+  min-width: 220px;
+}
+
+.filter-select {
+  min-width: 180px;
+}
+
+/* Checkbox dropdown filters (Year/Month/Day) */
+.multi-filter {
+  position: relative;
+  min-width: 160px;
+}
+
+.multi-filter__btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(10, 26, 60, 0.35);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.multi-filter__btn::after {
+  content: "▾";
+  color: var(--color-text-subtle);
+}
+
+.multi-filter__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  width: 260px;
+  max-height: 280px;
+  overflow: auto;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: rgba(10, 26, 60, 0.92);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+.multi-filter__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+.multi-filter__item:hover {
+  background: var(--color-bg-hover);
+}
+
+.multi-filter__item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
+}
+
+.multi-filter__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.multi-filter__grid .multi-filter__item {
+  justify-content: flex-start;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   11. TRANSACTION HISTORY TABLE
+   ───────────────────────────────────────────────────────────────────────── */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+
+/* Table header */
+.transactions-table thead {
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+.transactions-table th {
+  padding: var(--space-4) var(--space-5);
+  text-align: left;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.transactions-table th.col-amount {
+  text-align: right;
+}
+
+/* Sort button inside <th> */
+.sort-btn {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Icon + label row inside the sort button header cell. Flexbox row with
+     align-items:center keeps the caret aligned with the text baseline.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+
+.sort-btn:hover {
+  color: var(--color-accent);
+}
+
+.sort-icon {
+  width: 10px;
+  height: 14px;
+  color: var(--color-text-subtle);
+}
+
+/* Table body rows */
+.transactions-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color var(--transition-fast);
+}
+
+.transactions-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.transactions-table tbody tr:hover {
+  background: var(--color-bg-hover);
+}
+
+.transactions-table td {
+  padding: var(--space-4) var(--space-5);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.transactions-table td.col-amount {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Amount colour coding */
+.amount-positive {
+  color: var(--color-positive);
+}
+
+.amount-expense {
+  color: var(--color-text);
+}
+
+.amount-danger {
+  color: var(--color-danger);
+}
+
+/* Table footer totals row */
+.totals-row {
+  background: var(--color-bg-primary);
+  border-top: 2px solid var(--color-border-strong);
+}
+
+.totals-row th,
+.totals-row td {
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+/* Empty state within table */
+.table-empty-cell {
+  padding: var(--space-12) var(--space-5) !important;
+}
+
+.table-empty {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Icon above text — a centred one-dimensional column stack.
+     Flexbox column with align-items:center is the right tool.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--color-text-subtle);
+}
+
+.table-empty__icon {
+  width: 40px;
+  height: 40px;
+  opacity: 0.4;
+}
+
+.table-empty p {
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+/* Pagination */
+.pagination {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Prev button · page indicator · Next button — a three-item, centred row.
+     Flexbox with justify-content:center and a gap is the minimal solution.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.pagination__indicator {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   11b. MONTHLY OVERVIEW
+   Year-based monthly spending vs total budget overview grid.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.monthly-overview__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.monthly-overview__year-select {
+  width: 160px;
+}
+
+.monthly-overview__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+
+.monthly-overview__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--space-10) var(--space-6);
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+/* Individual month card */
+.month-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-primary);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.month-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+  transition: background var(--transition-fast);
+}
+
+/* ── Green state: within budget ── */
+.month-card--within::before {
+  background: var(--color-positive);
+}
+
+.month-card--within {
+  border-color: rgba(0, 196, 140, 0.25);
+  background: rgba(0, 196, 140, 0.04);
+}
+
+.month-card--within:hover {
+  border-color: rgba(0, 196, 140, 0.5);
+  background: rgba(0, 196, 140, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 196, 140, 0.15);
+}
+
+/* ── Red state: exceeded budget ── */
+.month-card--exceeded::before {
+  background: var(--color-danger);
+}
+
+.month-card--exceeded {
+  border-color: rgba(255, 0, 40, 0.25);
+  background: rgba(255, 0, 40, 0.04);
+}
+
+.month-card--exceeded:hover {
+  border-color: rgba(255, 0, 40, 0.5);
+  background: rgba(255, 0, 40, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 0, 40, 0.15);
+}
+
+/* ── No data state ── */
+.month-card--empty {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.month-card--empty:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Month card inner layout */
+.month-card__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.month-card__name {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.month-card__spent {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.month-card__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.month-card__status {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.month-card__status--within {
+  color: var(--color-positive);
+}
+
+.month-card__status--exceeded {
+  color: var(--color-danger);
+}
+
+.month-card__delta {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-card__delta--over {
+  color: var(--color-danger);
+}
+
+.month-card__delta--under {
+  color: var(--color-positive);
+}
+
+/* Arrow indicator for clickable cards */
+.month-card__arrow {
+  color: var(--color-text-subtle);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.month-card:not(.month-card--empty):hover .month-card__arrow {
+  color: var(--color-accent);
+  transform: translateX(3px);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   12. BUDGET SUMMARY CARD
+   ───────────────────────────────────────────────────────────────────────── */
+.budget-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ── Month Slider: navigate budget data per month ── */
+.month-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  user-select: none;
+}
+
+.month-slider__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.month-slider__btn:hover:not(:disabled) {
+  background: var(--color-accent-dim);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  box-shadow: 0 0 12px rgba(0, 229, 229, 0.15);
+}
+
+.month-slider__btn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.month-slider__btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.month-slider__track {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.month-slider__label {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+  transition: opacity 0.2s ease;
+}
+
+.month-slider__dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.month-slider__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.month-slider__dot:hover {
+  background: rgba(0, 229, 229, 0.4);
+  transform: scale(1.3);
+}
+
+.month-slider__dot--active {
+  background: var(--color-accent);
+  box-shadow: 0 0 8px rgba(0, 229, 229, 0.5);
+  transform: scale(1.3);
+}
+
+/* Each budget category row */
+.budget-item {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Each budget item is a two-line unit: meta row (label + amounts) and
+     bar row (progress bar + percentage). These are vertically stacked,
+     so Flexbox column with a gap separates them cleanly.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  transition: border-color var(--transition-fast);
+}
+
+.budget-item:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* Meta row: category dot + name on the left / amounts on the right */
+.budget-item__meta {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Two groups (label-group and amounts) spaced across a single row.
+     justify-content:space-between handles this in one property — ideal
+     for a one-dimensional fill-remaining-space distribution pattern.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.budget-item__label-group {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Colour dot + category name in a row. Flexbox with align-items:center
+     ensures the dot aligns to the text midline regardless of font size.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.budget-item__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Category dot colours map to design token palette */
+.budget-item__dot--food {
+  background-color: var(--color-cat-food);
+}
+
+.budget-item__dot--housing {
+  background-color: var(--color-cat-housing);
+}
+
+.budget-item__dot--transport {
+  background-color: var(--color-cat-transport);
+}
+
+.budget-item__dot--entertainment {
+  background-color: var(--color-cat-entertainment);
+}
+
+.budget-item__name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.budget-item__amounts {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Spent / separator / limit — a tight horizontal trio. Flexbox baseline
+     alignment keeps the numbers and separator on the same text baseline.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.budget-item__spent {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.budget-item__separator {
+  color: var(--color-text-subtle);
+  font-weight: 300;
+}
+
+.budget-item__limit {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* Editable budget limit — click to change */
+.budget-item__limit--editable {
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.budget-item__limit--editable:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+/* Inline number input for editing budget limits */
+.budget-limit-input {
+  width: 90px;
+  padding: 2px 6px;
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-accent);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  outline: none;
+  text-align: right;
+}
+
+/* Bar row: progress bar + percentage label */
+.budget-item__bar-row {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     The progress bar needs to grow to fill available width while the
+     percentage label stays fixed-width on the right. Flexbox row with
+     flex:1 on the bar achieves this without hard-coded widths.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Progress bar track */
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+/* Progress fill — percentage width set per-item via inline style */
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), #0af0c0);
+  border-radius: var(--radius-pill);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Overrun state: JS adds this class when spending exceeds the limit */
+.progress-fill--overrun {
+  background: linear-gradient(90deg, var(--color-danger), #ff4d6a);
+}
+
+.budget-item--overrun {
+  border-color: var(--color-danger-dim);
+  background: rgba(255, 0, 40, 0.04);
+}
+
+.budget-item__percent {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Budget overrun warning banner — Electric Red, hidden by default */
+.budget-warning {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Icon + message string in one row. Flexbox align-items:center keeps
+     the warning icon vertically centred against the text.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-danger-dim);
+  border: 1px solid rgba(255, 0, 40, 0.35);
+  border-radius: var(--radius-md);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+
+  /* display:none used by JS via the 'hidden' attribute;
+     this rule overrides it when JS removes [hidden] */
+}
+
+.budget-warning[hidden] {
+  display: none;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   13. CHARTS SECTION
+   ───────────────────────────────────────────────────────────────────────── */
+.charts-grid {
+  /* ─── WHY CSS GRID HERE (not Flexbox) ────────────────────────────────────
+     Three chart cards that must maintain equal widths AND equal heights
+     regardless of content. CSS Grid with repeat(auto-fit, minmax()) gives
+     identical columns without explicit sizing. More importantly, grid tracks
+     enforce same-height rows across all cells automatically — Flexbox would
+     require align-items:stretch and does not handle the two-dimensional
+     aspect of ensuring all cards begin at the same visual baseline.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+
+/* Individual chart card */
+.chart-card {
+  /* ─── WHY FLEXBOX ───────────────────────────────────────────────────────
+     Inside each chart card: caption (figcaption) stacked above the canvas
+     wrapper. One-dimensional column — Flexbox is correct here.
+     ─────────────────────────────────────────────────────────────────────── */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-normal),
+    box-shadow var(--transition-normal);
+  margin: 0;
+}
+
+.chart-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.5);
+}
+
+/* .chart-card__caption intentionally left empty — layout handled by flex gap */
+
+.chart-card__title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-1);
+}
+
+.chart-card__subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* ECharts container — needs explicit dimensions */
+.chart-container {
+  width: 100%;
+  height: 380px;
+  min-height: 320px;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   14. FOCUS MANAGEMENT & ACCESSIBILITY
+   ───────────────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Remove custom outline from elements that define their own focus style */
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: none;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   15. SCROLLBAR STYLING
+   Custom scrollbars to match the dark navy palette.
+   Webkit-only; other browsers show their default chrome.
+   ───────────────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 229, 0.25);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 229, 0.45);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   16. SELECTION HIGHLIGHT
+   ───────────────────────────────────────────────────────────────────────── */
+::selection {
+  background: var(--color-accent-dim);
+  color: var(--color-accent);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   17. RESPONSIVE ADJUSTMENTS
+   Grid column tracks collapse gracefully on narrower viewports.
+   Note: The spec says "Semantic HTML5 and Vanilla CSS" — no meta-framework.
+   These breakpoints are authored directly.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 220px;
+  }
+
+  .form-row--three {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+
+  /* Stack sidebar above main content on mobile */
+  body {
+    grid-template-areas:
+      "header"
+      "main";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  #sidebar {
+    /* Hide sidebar on small screens — a mobile nav pattern would be
+       added via JavaScript in the next development phase */
+    display: none;
+  }
+
+  #top-header {
+    padding: var(--space-5) var(--space-5);
+  }
+
+  .header__title-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .metrics-bar {
+    gap: var(--space-3);
+  }
+
+  .metric-card {
+    min-width: 140px;
+  }
+
+  #main-content {
+    padding: var(--space-5);
+    gap: var(--space-5);
+  }
+
+  .dashboard-section {
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+  }
+
+  .form-row,
+  .form-row--three {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header--with-controls {
+    flex-direction: column;
+  }
+
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input,
+  .filter-select {
+    min-width: unset;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-bar {
+    flex-direction: column;
+  }
+
+  .metric-card {
+    min-width: unset;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   18. DYNAMIC UI ELEMENTS (Rendered by JS)
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Badges for transaction types */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge--income {
+  background: var(--color-positive-dim);
+  color: var(--color-positive);
+}
+
+.badge--expense {
+  background: rgba(245, 245, 245, 0.1);
+  color: var(--color-text-muted);
+}
+
+/* Category tags in the table */
+.category-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+/* Delete button refinement */
+.btn-delete {
+  opacity: 0.3;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-delete:hover {
+  opacity: 1;
+  color: var(--color-danger);
+  border-color: var(--color-danger-dim);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   19. SETTINGS & MODALS
+   ───────────────────────────────────────────────────────────────────────── */
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-6);
+}
+
+.settings-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.settings-card__title {
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+}
+
+.settings-card__text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-5);
+  line-height: var(--line-height-normal);
+}
+
+.settings-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+}
+
+.modal-content {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: modalEnter 0.2s ease-out;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-title {
+  font-size: var(--font-size-xl);
+  color: var(--color-danger);
+  margin-bottom: var(--space-3);
+  letter-spacing: -0.02em;
+}
+
+.modal-text {
+  color: var(--color-text-muted);
+  line-height: var(--line-height-normal);
+  margin-bottom: var(--space-8);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   20. ANOMALY DETECTION
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Transaction row flagged as anomaly */
+.anomaly-row {
+  background: rgba(255, 0, 40, 0.04) !important;
+  border-left: 3px solid var(--color-danger) !important;
+}
+
+.anomaly-row:hover {
+  background: rgba(255, 0, 40, 0.08) !important;
+}
+
+/* Anomaly badge in the Status column */
+.badge--anomaly {
+  background: var(--color-danger-dim);
+  color: var(--color-danger);
+  animation: anomalyPulse 2s ease-in-out infinite;
+}
+
+@keyframes anomalyPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Anomaly alerts grid */
+.anomaly-alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Individual anomaly card */
+.anomaly-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.anomaly-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Warning severity (Z > 2) */
+.anomaly-card--warning {
+  border-left: 4px solid #F59E0B;
+}
+
+.anomaly-card--warning .anomaly-card__severity {
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+/* Critical severity (Z > 3) */
+.anomaly-card--critical {
+  border-left: 4px solid var(--color-danger);
+  background: rgba(255, 0, 40, 0.03);
+}
+
+.anomaly-card--critical .anomaly-card__severity {
+  color: var(--color-danger);
+  background: var(--color-danger-dim);
+}
+
+/* Card header: severity badge + Z-score */
+.anomaly-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.anomaly-card__severity {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.anomaly-card__zscore {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Card body: description + amount */
+.anomaly-card__body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.anomaly-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.anomaly-card__description {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.anomaly-card__meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+}
+
+.anomaly-card__amount {
+  font-size: var(--font-size-md);
+  font-weight: 800;
+  color: var(--color-danger);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Context bar: mean + multiplier */
+.anomaly-card__context {
+  display: flex;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+}
+
+.anomaly-card__context strong {
+  color: var(--color-danger);
+}
+
+
+/* Hidden state utility */
+[hidden] {
+  display: none !important;
+}
+
+/* FinSight logo sizing */
+img[src="/public/logo.png"] {
+    width: 200px;
+    height: 150px;
+    object-fit: contain;
+}

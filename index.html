@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="FinSight Analytics — A sophisticated personal financial dashboard for tracking transactions, budgets, and spending trends." />
+  <title>FinSight Analytics</title>
+  <!-- Google Fonts: Inter for a clean, professional financial aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/public/styles.css">
+  <!-- Apache ECharts: rich, interactive data visualisation -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+
+<!--
+    BODY is the CSS Grid macro-layout container.
+    grid-template-areas: "sidebar header" / "sidebar main"
+    This means the sidebar spans both rows on the left,
+    while header and main stack vertically on the right.
+  -->
+
+<body>
+
+  <!-- Full-screen landing intro -->
+  <section id="landing-screen" class="landing-screen" aria-label="FinSight introduction">
+    <div class="landing-screen__content">
+      <img src="/public/logo.png" alt="FinSight Logo">
+      <h1 class="landing-screen__title">FinSight</h1>
+      <button id="btn-landing-start" class="btn btn--primary landing-screen__start" type="button">Let's Start</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+         SIDEBAR  ·  grid-area: sidebar
+         Fixed navigation rail — brand logo + primary nav links.
+         Internally uses Flexbox (column) to stack items vertically.
+    ═══════════════════════════════════════════════════════ -->
+  <aside id="sidebar" aria-label="Primary navigation">
+
+    <!-- Brand identity block -->
+    <div class="sidebar__logo" aria-label="FinSight Analytics" role="button" tabindex="0">
+      <img src="/public/logo.png" alt="Logo">
+      <span class="sidebar__logo-text">FinSight</span>
+    </div>
+
+    <!-- Primary navigation — semantic <nav> wrapping an ordered list -->
+    <nav aria-label="Dashboard sections">
+      <ul class="sidebar__nav-list" role="list">
+
+        <li class="sidebar__nav-item sidebar__nav-item--active">
+          <a href="#dashboard-overview" class="sidebar__nav-link" aria-current="page">
+            <!-- Overview icon: grid of squares -->
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
+              <rect x="13" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
+              <rect x="3" y="13" width="8" height="8" rx="1.5" fill="currentColor" />
+              <rect x="13" y="13" width="8" height="8" rx="1.5" fill="currentColor" />
+            </svg>
+            <span>Overview</span>
+          </a>
+        </li>
+
+        <li class="sidebar__nav-item">
+          <a href="#transaction-history" class="sidebar__nav-link">
+            <!-- Transactions icon: list lines -->
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="5" width="18" height="2" rx="1" fill="currentColor" />
+              <rect x="3" y="11" width="14" height="2" rx="1" fill="currentColor" />
+              <rect x="3" y="17" width="10" height="2" rx="1" fill="currentColor" />
+            </svg>
+            <span>Transactions</span>
+          </a>
+        </li>
+
+        <li class="sidebar__nav-item">
+          <a href="#budget-summary" class="sidebar__nav-link">
+            <!-- Budget icon: wallet outline -->
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8" />
+              <path d="M2 10h20" stroke="currentColor" stroke-width="1.8" />
+              <circle cx="17" cy="15" r="1.5" fill="currentColor" />
+              <path d="M6 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.8" />
+            </svg>
+            <span>Budget</span>
+          </a>
+        </li>
+
+        <li class="sidebar__nav-item">
+          <a href="#charts" class="sidebar__nav-link">
+            <!-- Analytics icon: line chart -->
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="3,17 8,11 13,14 21,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <line x1="3" y1="21" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+            <span>Analytics</span>
+          </a>
+        </li>
+
+        <li class="sidebar__nav-item">
+          <a href="#anomaly-alerts-section" class="sidebar__nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L1 21h22L12 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <line x1="12" y1="10" x2="12" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="12" cy="17" r="1" fill="currentColor"/>
+            </svg>
+            <span>Anomalies</span>
+          </a>
+        </li>
+
+        <li class="sidebar__nav-item">
+          <a href="#csv-upload" class="sidebar__nav-link">
+            <!-- Import icon: upload arrow -->
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 3v13M7 8l5-5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" />
+            </svg>
+            <span>Import CSV</span>
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+
+    <!-- Bottom utility links (settings, help) -->
+    <div class="sidebar__footer">
+      <a href="#settings" class="sidebar__nav-link sidebar__nav-link--muted">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" />
+          <path
+            d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+        <span>Settings</span>
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════════
+         HEADER  ·  grid-area: header
+         Summary metrics bar displayed at the top of the content area.
+         Internally uses Flexbox (row) to space the four metric cards.
+    ═══════════════════════════════════════════════════════ -->
+  <header id="top-header" role="banner">
+
+    <div class="header__title-group">
+      <h1 class="header__title">Financial Overview</h1>
+      <time class="header__date" datetime="2026-04">April 2026</time>
+    </div>
+
+    <!-- Metrics bar: four KPI cards laid out in a flex row -->
+    <div class="metrics-bar" role="region" aria-label="Summary financial metrics">
+
+      <article class="metric-card" aria-label="Net Balance">
+        <span class="metric-card__label">Net Balance</span>
+        <span class="metric-card__value metric-card__value--positive" id="metric-balance">—</span>
+        <span class="metric-card__delta" id="metric-balance-delta" aria-live="polite"></span>
+      </article>
+
+      <article class="metric-card" aria-label="Total Income">
+        <span class="metric-card__label">Income</span>
+        <span class="metric-card__value metric-card__value--positive" id="metric-income">—</span>
+        <span class="metric-card__delta" id="metric-income-delta" aria-live="polite"></span>
+      </article>
+
+      <article class="metric-card" aria-label="Total Expenses">
+        <span class="metric-card__label">Expenses</span>
+        <span class="metric-card__value metric-card__value--neutral" id="metric-expenses">—</span>
+        <span class="metric-card__delta" id="metric-expenses-delta" aria-live="polite"></span>
+      </article>
+
+      <article class="metric-card" aria-label="Savings Rate">
+        <span class="metric-card__label">Savings Rate</span>
+        <span class="metric-card__value metric-card__value--neutral" id="metric-savings-rate">—</span>
+        <span class="metric-card__delta" id="metric-savings-delta" aria-live="polite"></span>
+      </article>
+
+    </div>
+
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+         MAIN CONTENT AREA  ·  grid-area: main
+         Vertically scrollable. Houses all dashboard sections.
+         Each section is a semantically appropriate element.
+    ═══════════════════════════════════════════════════════ -->
+  <main id="main-content" role="main">
+
+    <!-- ─────────────────────────────────────────────────────
+           SECTION 1: MANUAL TRANSACTION ENTRY FORM
+           Allows users to log a transaction by hand.
+           The <form> uses Flexbox column internally.
+      ───────────────────────────────────────────────────── -->
+    <section id="add-transaction" class="dashboard-section" aria-labelledby="add-transaction-heading">
+
+      <div class="section-header">
+        <h2 id="add-transaction-heading" class="section-title">Add Transaction</h2>
+        <p class="section-subtitle">Log a new income or expense entry manually.</p>
+      </div>
+
+      <form id="transaction-form" class="transaction-form" novalidate aria-label="Manual transaction entry form">
+        <!-- Row 1: Date & Description side by side via CSS Grid sub-grid -->
+        <div class="form-row">
+
+          <div class="form-group">
+            <label class="form-label" for="txn-date">Date</label>
+            <input id="txn-date" class="form-input" type="date" name="date" required aria-required="true" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="txn-description">Description</label>
+            <input id="txn-description" class="form-input" type="text" name="description"
+              placeholder="e.g. Grocery run, Salary credit" required aria-required="true" maxlength="120" />
+          </div>
+
+        </div>
+
+        <!-- Row 2: Amount, Type, Category -->
+        <div class="form-row form-row--three">
+
+          <div class="form-group">
+            <label class="form-label" for="txn-amount">Amount (₹)</label>
+            <input id="txn-amount" class="form-input" type="number" name="amount" placeholder="0.00" min="0" step="0.01"
+              required aria-required="true" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="txn-type">Type</label>
+            <select id="txn-type" class="form-select" name="type" required aria-required="true">
+              <option value="" disabled selected>Select type</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+              <option value="transfer">Transfer</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="txn-category">Category</label>
+            <select id="txn-category" class="form-select" name="category" required aria-required="true">
+              <option value="" disabled selected>Select category</option>
+              <optgroup label="Income">
+                <option value="Salary">Salary</option>
+                <option value="Freelance">Freelance</option>
+                <option value="Investment">Investment</option>
+                <option value="Other Income">Other Income</option>
+              </optgroup>
+              <optgroup label="Expenses">
+                <option value="Housing">Housing &amp; Rent</option>
+                <option value="Food &amp; Dining">Food &amp; Dining</option>
+                <option value="Transport">Transport</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Subscriptions">Subscriptions</option>
+                <option value="Education">Education</option>
+                <option value="Other Expense">Other Expense</option>
+              </optgroup>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Notes: optional full-width field -->
+        <div class="form-group form-group--full">
+          <label class="form-label" for="txn-notes">Notes <span class="form-label__optional">(optional)</span></label>
+          <input id="txn-notes" class="form-input" type="text" name="notes" placeholder="Add any additional context…"
+            maxlength="255" />
+        </div>
+
+        <!-- Form actions -->
+        <div class="form-actions">
+          <button type="reset" id="btn-reset-form" class="btn btn--secondary">Clear</button>
+          <button type="submit" id="btn-add-transaction" class="btn btn--primary">
+            <!-- Plus icon -->
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16"
+              height="16">
+              <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            Add Transaction
+          </button>
+        </div>
+
+        <!-- Inline form validation message region -->
+        <div id="form-messages" class="form-messages" role="alert" aria-live="polite"></div>
+
+      </form>
+
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+           SECTION 2: CSV DRAG-AND-DROP UPLOAD ZONE
+           Accepts bank-exported CSV files for bulk import.
+           Drop zone uses Flexbox column + center alignment.
+      ───────────────────────────────────────────────────── -->
+    <section id="csv-upload" class="dashboard-section" aria-labelledby="csv-upload-heading">
+
+      <div class="section-header">
+        <h2 id="csv-upload-heading" class="section-title">Import Transactions</h2>
+        <p class="section-subtitle">Drag and drop a bank-exported CSV file, or click to browse.</p>
+      </div>
+
+      <!-- The drop zone is a <label> so clicking it opens the hidden file input -->
+      <label id="csv-drop-zone" class="drop-zone" for="csv-file-input" role="button" tabindex="0"
+        aria-label="Drag and drop CSV file or click to browse" aria-describedby="csv-format-hint">
+        <!-- Upload cloud icon -->
+        <svg class="drop-zone__icon" viewBox="0 0 64 64" fill="none" aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg">
+          <path d="M44 40a12 12 0 10-4-23.27A16 16 0 108.6 36" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M32 38v18M25 44l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+
+        <p class="drop-zone__primary-text">
+          Drop your CSV file here
+          <span class="drop-zone__or">or</span>
+          <span class="drop-zone__browse-cta">click to browse</span>
+        </p>
+
+        <!-- Accepted format hint -->
+        <p id="csv-format-hint" class="drop-zone__hint">
+          Supported format: <strong>.csv</strong> · Columns expected:
+          <code>Date, Description, Amount, Category, Type</code>
+        </p>
+
+        <!-- Hidden native file input — triggered by clicking the label -->
+        <input id="csv-file-input" type="file" name="csv" accept=".csv,text/csv" class="drop-zone__file-input"
+          aria-hidden="true" tabindex="-1" />
+      </label>
+
+      <!-- Upload progress / status feedback area -->
+      <div id="csv-upload-status" class="upload-status" role="status" aria-live="polite"></div>
+
+      <!-- Imported files list (populated by app.js) -->
+      <div id="imported-files-panel" class="imported-files" aria-live="polite">
+        <div class="imported-files__header">
+          <h3 class="imported-files__title">Imported files</h3>
+          <button id="btn-clear-imported-files" class="btn btn--secondary btn--sm" type="button">
+            Clear list
+          </button>
+        </div>
+        <div id="imported-files-empty" class="imported-files__empty">No files imported yet.</div>
+        <ul id="imported-files-list" class="imported-files__list" aria-label="List of imported CSV files"></ul>
+      </div>
+
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+           SECTION 2b: MONTHLY OVERVIEW
+           Year-based monthly spending vs. total budget overview.
+           Clicking a month navigates to the Budget Tracker for that month.
+      ───────────────────────────────────────────────────── -->
+    <section id="monthly-overview" class="dashboard-section" aria-labelledby="monthly-overview-heading">
+
+      <div class="section-header">
+        <h2 id="monthly-overview-heading" class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" width="22" height="22" style="vertical-align: -3px; margin-right: 6px;" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M3 10h18" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Monthly Overview
+        </h2>
+        <p class="section-subtitle">Track your monthly spending against total budget limits. Red indicates exceeded budget, green means within limits.</p>
+      </div>
+
+      <!-- Year selection filter -->
+      <div class="monthly-overview__controls">
+        <label class="form-label" for="overview-year-select" style="margin-bottom: 0;">Select Year</label>
+        <select id="overview-year-select" class="form-select monthly-overview__year-select" aria-label="Select year for monthly overview">
+          <!-- Options populated dynamically by JS -->
+        </select>
+      </div>
+
+      <!-- 12-month grid — populated by renderMonthlyOverview() -->
+      <div id="monthly-overview-grid" class="monthly-overview__grid" aria-label="Monthly spending overview">
+        <div class="monthly-overview__empty">Select a year to view monthly budget status.</div>
+      </div>
+
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+           SECTION 3: TRANSACTION HISTORY TABLE
+           Tabular display of all recorded transactions.
+           <table> provides inherent two-dimensional semantics.
+      ───────────────────────────────────────────────────── -->
+    <section id="transaction-history" class="dashboard-section" aria-labelledby="history-heading">
+
+      <div class="section-header section-header--with-controls">
+        <div>
+          <h2 id="history-heading" class="section-title">Transaction History</h2>
+          <p class="section-subtitle">A complete log of your financial activity.</p>
+        </div>
+        <!-- Table controls: search + filter (static containers for JS) -->
+        <div class="table-controls">
+          <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg">
+              <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8" />
+              <path d="M13.5 13.5L18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+            <input id="txn-search" type="search" class="form-input search-input" placeholder="Search transactions…"
+              aria-label="Search transactions" />
+          </div>
+          <select id="filter-category" class="form-select filter-select" aria-label="Filter by category">
+            <option value="">All Categories</option>
+            <option value="Salary">Salary</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Investment">Investment</option>
+            <option value="Food & Dining">Food & Dining</option>
+            <option value="Housing">Housing</option>
+            <option value="Transport">Transport</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Subscriptions">Subscriptions</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Education">Education</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
+        <div class="table-controls" style="margin-top: 10px; display: flex; gap: 8px; align-items: flex-start;">
+          <div class="multi-filter" id="filter-year">
+            <button type="button" class="multi-filter__btn" data-target="filter-year-menu" aria-haspopup="true"
+              aria-expanded="false">
+              Year
+            </button>
+            <div id="filter-year-menu" class="multi-filter__menu" role="group" aria-label="Filter by year" hidden>
+              <label class="multi-filter__item"><input type="checkbox" value="2023" data-filter="year" /> 2023</label>
+              <label class="multi-filter__item"><input type="checkbox" value="2024" data-filter="year" /> 2024</label>
+              <label class="multi-filter__item"><input type="checkbox" value="2025" data-filter="year" /> 2025</label>
+              <label class="multi-filter__item"><input type="checkbox" value="2026" data-filter="year" /> 2026</label>
+            </div>
+          </div>
+
+          <div class="multi-filter" id="filter-month">
+            <button type="button" class="multi-filter__btn" data-target="filter-month-menu" aria-haspopup="true"
+              aria-expanded="false">
+              Month
+            </button>
+            <div id="filter-month-menu" class="multi-filter__menu" role="group" aria-label="Filter by month" hidden>
+              <label class="multi-filter__item"><input type="checkbox" value="1" data-filter="month" /> Jan</label>
+              <label class="multi-filter__item"><input type="checkbox" value="2" data-filter="month" /> Feb</label>
+              <label class="multi-filter__item"><input type="checkbox" value="3" data-filter="month" /> Mar</label>
+              <label class="multi-filter__item"><input type="checkbox" value="4" data-filter="month" /> Apr</label>
+              <label class="multi-filter__item"><input type="checkbox" value="5" data-filter="month" /> May</label>
+              <label class="multi-filter__item"><input type="checkbox" value="6" data-filter="month" /> Jun</label>
+              <label class="multi-filter__item"><input type="checkbox" value="7" data-filter="month" /> Jul</label>
+              <label class="multi-filter__item"><input type="checkbox" value="8" data-filter="month" /> Aug</label>
+              <label class="multi-filter__item"><input type="checkbox" value="9" data-filter="month" /> Sep</label>
+              <label class="multi-filter__item"><input type="checkbox" value="10" data-filter="month" /> Oct</label>
+              <label class="multi-filter__item"><input type="checkbox" value="11" data-filter="month" /> Nov</label>
+              <label class="multi-filter__item"><input type="checkbox" value="12" data-filter="month" /> Dec</label>
+            </div>
+          </div>
+
+          <div class="multi-filter" id="filter-day">
+            <button type="button" class="multi-filter__btn" data-target="filter-day-menu" aria-haspopup="true"
+              aria-expanded="false">
+              Day
+            </button>
+            <div id="filter-day-menu" class="multi-filter__menu" role="group" aria-label="Filter by day" hidden>
+              <div class="multi-filter__grid">
+                <label class="multi-filter__item"><input type="checkbox" value="1" data-filter="day" /> 1</label>
+                <label class="multi-filter__item"><input type="checkbox" value="2" data-filter="day" /> 2</label>
+                <label class="multi-filter__item"><input type="checkbox" value="3" data-filter="day" /> 3</label>
+                <label class="multi-filter__item"><input type="checkbox" value="4" data-filter="day" /> 4</label>
+                <label class="multi-filter__item"><input type="checkbox" value="5" data-filter="day" /> 5</label>
+                <label class="multi-filter__item"><input type="checkbox" value="6" data-filter="day" /> 6</label>
+                <label class="multi-filter__item"><input type="checkbox" value="7" data-filter="day" /> 7</label>
+                <label class="multi-filter__item"><input type="checkbox" value="8" data-filter="day" /> 8</label>
+                <label class="multi-filter__item"><input type="checkbox" value="9" data-filter="day" /> 9</label>
+                <label class="multi-filter__item"><input type="checkbox" value="10" data-filter="day" /> 10</label>
+                <label class="multi-filter__item"><input type="checkbox" value="11" data-filter="day" /> 11</label>
+                <label class="multi-filter__item"><input type="checkbox" value="12" data-filter="day" /> 12</label>
+                <label class="multi-filter__item"><input type="checkbox" value="13" data-filter="day" /> 13</label>
+                <label class="multi-filter__item"><input type="checkbox" value="14" data-filter="day" /> 14</label>
+                <label class="multi-filter__item"><input type="checkbox" value="15" data-filter="day" /> 15</label>
+                <label class="multi-filter__item"><input type="checkbox" value="16" data-filter="day" /> 16</label>
+                <label class="multi-filter__item"><input type="checkbox" value="17" data-filter="day" /> 17</label>
+                <label class="multi-filter__item"><input type="checkbox" value="18" data-filter="day" /> 18</label>
+                <label class="multi-filter__item"><input type="checkbox" value="19" data-filter="day" /> 19</label>
+                <label class="multi-filter__item"><input type="checkbox" value="20" data-filter="day" /> 20</label>
+                <label class="multi-filter__item"><input type="checkbox" value="21" data-filter="day" /> 21</label>
+                <label class="multi-filter__item"><input type="checkbox" value="22" data-filter="day" /> 22</label>
+                <label class="multi-filter__item"><input type="checkbox" value="23" data-filter="day" /> 23</label>
+                <label class="multi-filter__item"><input type="checkbox" value="24" data-filter="day" /> 24</label>
+                <label class="multi-filter__item"><input type="checkbox" value="25" data-filter="day" /> 25</label>
+                <label class="multi-filter__item"><input type="checkbox" value="26" data-filter="day" /> 26</label>
+                <label class="multi-filter__item"><input type="checkbox" value="27" data-filter="day" /> 27</label>
+                <label class="multi-filter__item"><input type="checkbox" value="28" data-filter="day" /> 28</label>
+                <label class="multi-filter__item"><input type="checkbox" value="29" data-filter="day" /> 29</label>
+                <label class="multi-filter__item"><input type="checkbox" value="30" data-filter="day" /> 30</label>
+                <label class="multi-filter__item"><input type="checkbox" value="31" data-filter="day" /> 31</label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Scrollable table wrapper for horizontal overflow on small viewports -->
+      <div class="table-wrapper" role="region" aria-label="Transaction history table" tabindex="0">
+        <table id="transactions-table" class="transactions-table">
+          <caption class="sr-only">List of all recorded financial transactions</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="col-date" aria-sort="descending">
+                <button class="sort-btn" id="sort-date" aria-label="Sort by date">
+                  Date
+                  <svg class="sort-icon" viewBox="0 0 10 14" fill="none" aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 1v12M1 9l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </svg>
+                </button>
+              </th>
+              <th scope="col" class="col-description">Description</th>
+              <th scope="col" class="col-category">Category</th>
+              <th scope="col" class="col-amount">
+                <button class="sort-btn" id="sort-amount" aria-label="Sort by amount">
+                  Amount
+                  <svg class="sort-icon" viewBox="0 0 10 14" fill="none" aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 1v12M1 9l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </svg>
+                </button>
+              </th>
+              <th scope="col" class="col-type">Type</th>
+              <th scope="col" class="col-status">Status</th>
+              <th scope="col" class="col-actions">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="transactions-tbody" aria-live="polite">
+            <!-- Empty state placeholder row — JS will replace this with real data -->
+            <tr class="table-empty-row">
+              <td colspan="7" class="table-empty-cell">
+                <div class="table-empty">
+                  <svg class="table-empty__icon" viewBox="0 0 48 48" fill="none" aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <rect x="8" y="12" width="32" height="28" rx="3" stroke="currentColor" stroke-width="2" />
+                    <path d="M16 12V9a2 2 0 012-2h12a2 2 0 012 2v3" stroke="currentColor" stroke-width="2" />
+                    <line x1="16" y1="22" x2="32" y2="22" stroke="currentColor" stroke-width="1.8"
+                      stroke-linecap="round" />
+                    <line x1="16" y1="28" x2="26" y2="28" stroke="currentColor" stroke-width="1.8"
+                      stroke-linecap="round" />
+                  </svg>
+                  <p>No transactions yet. Add one above or import a CSV.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr id="transactions-totals-row" class="totals-row">
+              <th scope="row" colspan="3">Totals</th>
+              <td id="total-income-cell" class="col-amount amount-positive">—</td>
+              <td id="total-expense-cell" colspan="3" class="col-amount"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Pagination controls (static structure; JS populates) -->
+      <nav id="pagination" class="pagination" aria-label="Transaction table pagination">
+        <button id="btn-prev-page" class="btn btn--ghost btn--sm" disabled aria-label="Previous page">&#8592;
+          Prev</button>
+        <span id="page-indicator" class="pagination__indicator" aria-live="polite">Page 1 of 1</span>
+        <button id="btn-next-page" class="btn btn--ghost btn--sm" disabled aria-label="Next page">Next &#8594;</button>
+      </nav>
+
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+           SECTION 4: BUDGET SUMMARY CARD
+           Shows spending vs. budget per category with progress bars.
+           Uses Flexbox for each row (label + amount + bar + %).
+      ───────────────────────────────────────────────────── -->
+    <section id="budget-summary" class="dashboard-section" aria-labelledby="budget-heading">
+
+      <div class="section-header">
+        <h2 id="budget-heading" class="section-title">Budget Tracker</h2>
+        <p class="section-subtitle">Monthly spending versus your allocated budgets.</p>
+      </div>
+
+      <div class="budget-card" role="region" aria-label="Budget summary">
+
+        <!-- ── Month Slider — navigate budget data per month ── -->
+        <div id="budget-month-slider" class="month-slider" role="navigation" aria-label="Budget month navigation">
+          <button id="btn-budget-month-prev" class="month-slider__btn" aria-label="Previous month">
+            <svg viewBox="0 0 20 20" fill="none" width="18" height="18" aria-hidden="true">
+              <path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="month-slider__track">
+            <span id="budget-month-label" class="month-slider__label">April 2026</span>
+            <div class="month-slider__dots" id="budget-month-dots" aria-hidden="true">
+              <!-- Dots rendered dynamically by JS -->
+            </div>
+          </div>
+          <button id="btn-budget-month-next" class="month-slider__btn" aria-label="Next month">
+            <svg viewBox="0 0 20 20" fill="none" width="18" height="18" aria-hidden="true">
+              <path d="M8 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Budget items rendered dynamically by renderBudgetTracker() -->
+        <div id="budget-items-container"></div>
+
+        <!-- Warning banner — shown by JS when a category overruns (Electric Red) -->
+        <div id="budget-overrun-warning" class="budget-warning" role="alert" aria-live="assertive" hidden>
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18"
+            height="18">
+            <path d="M10 2L2 17h16L10 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+            <line x1="10" y1="9" x2="10" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            <circle cx="10" cy="15.5" r="0.5" fill="currentColor" stroke="currentColor" />
+          </svg>
+          <span id="budget-overrun-message">You have exceeded your budget in one or more categories.</span>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+           SECTION 4b: ANOMALY DETECTION ALERTS
+           Shows transactions flagged by Z-Score analysis.
+           Dynamically populated by renderAnomalyAlerts().
+      ───────────────────────────────────────────────────── -->
+    <section id="anomaly-alerts-section" class="dashboard-section" aria-labelledby="anomaly-heading" hidden>
+
+      <div class="section-header">
+        <h2 id="anomaly-heading" class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" width="22" height="22" style="vertical-align: -3px; margin-right: 6px;" aria-hidden="true">
+            <path d="M12 2L1 21h22L12 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <line x1="12" y1="10" x2="12" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="17" r="1" fill="currentColor"/>
+          </svg>
+          Anomaly Detection
+        </h2>
+        <p class="section-subtitle">Transactions with statistically unusual amounts within their month (Z-score &gt; 2.0, per-month standard deviation analysis).</p>
+      </div>
+
+      <div id="anomaly-alerts-container" class="anomaly-alerts-grid"></div>
+
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+           SECTION 5: CHARTS
+           Three div containers for Apache ECharts instances.
+           Container IDs are the integration contract with app.js.
+      ───────────────────────────────────────────────────── -->
+    <section id="charts" class="dashboard-section" aria-labelledby="charts-heading">
+
+      <div class="section-header">
+        <h2 id="charts-heading" class="section-title">Analytics</h2>
+        <p class="section-subtitle">Visual breakdown of your financial activity over time.</p>
+      </div>
+
+      <!-- Three-column chart grid (CSS Grid sub-layout inside this section) -->
+      <div class="charts-grid">
+
+        <!-- Chart 1: Spending Trend -->
+        <figure class="chart-card" id="chart-card-trend" aria-label="Spending trend over time">
+          <figcaption class="chart-card__caption">
+            <h3 class="chart-card__title">Spending Trend</h3>
+            <p class="chart-card__subtitle">Income vs. expenses over the last 6 months</p>
+          </figcaption>
+          <div class="chart-container" id="spending-trend-chart"></div>
+        </figure>
+
+        <!-- Chart 2: Category Breakdown -->
+        <figure class="chart-card" id="chart-card-breakdown" aria-label="Spending breakdown by category">
+          <figcaption class="chart-card__caption">
+            <h3 class="chart-card__title">Category Breakdown</h3>
+            <p class="chart-card__subtitle">Proportion of expenses per category</p>
+          </figcaption>
+          <div class="chart-container" id="category-breakdown-chart"></div>
+        </figure>
+
+        <!-- Chart 3: Budget vs. Actual -->
+        <figure class="chart-card" id="chart-card-budget" aria-label="Budget versus actual spending">
+          <figcaption class="chart-card__caption">
+            <h3 class="chart-card__title">Budget vs. Actual</h3>
+            <p class="chart-card__subtitle">How actual spending tracks against set budgets</p>
+          </figcaption>
+          <div class="chart-container" id="budget-vs-actual-chart"></div>
+        </figure>
+
+      </div>
+
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────
+           SECTION 6: SETTINGS & DATA MANAGEMENT
+           Allows users to reset data or load sample Indian data.
+      ───────────────────────────────────────────────────── -->
+    <section id="settings" class="dashboard-section" aria-labelledby="settings-heading">
+
+      <div class="section-header">
+        <h2 id="settings-heading" class="section-title">App Settings</h2>
+        <p class="section-subtitle">Manage your local data and application preferences.</p>
+      </div>
+
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3 class="settings-card__title">Data Management</h3>
+          <p class="settings-card__text">Clear all stored transactions and local history from your browser.</p>
+          <div class="settings-actions">
+            <button id="btn-reset-data-init" class="btn btn--secondary"
+              style="color: var(--color-danger); border-color: var(--color-danger-dim);">
+              Reset All Data
+            </button>
+            <button id="btn-load-sample" class="btn btn--ghost">
+              Load Sample Indian Data
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Two-Step Confirmation Overlay -->
+    <div id="modal-confirm-reset" class="modal-overlay" hidden>
+      <div class="modal-content">
+        <h3 class="modal-title">Delete All Data?</h3>
+        <p class="modal-text">This action is permanent and cannot be undone. All your transasctions and budgets will be
+          wiped.</p>
+        <div class="modal-actions">
+          <button id="btn-reset-data-cancel" class="btn btn--secondary">Cancel</button>
+          <button id="btn-reset-data-confirm" class="btn btn--primary"
+            style="background: var(--color-danger); color: white;">
+            Yes, Delete Everything
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Exceeded Notification Overlay -->
+    <div id="modal-budget-exceeded" class="modal-overlay" hidden>
+      <div class="modal-content">
+        <h3 class="modal-title" style="color: var(--color-danger);">
+          <svg viewBox="0 0 20 20" fill="none" width="22" height="22" style="vertical-align: -4px; margin-right: 6px;" aria-hidden="true">
+            <path d="M10 2L2 17h16L10 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+            <line x1="10" y1="9" x2="10" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <circle cx="10" cy="15.5" r="1.5" fill="currentColor" />
+          </svg>
+          Budget Exceeded
+        </h3>
+        <p class="modal-text" id="budget-exceeded-msg">This transaction exceeds your budget.</p>
+        <div class="modal-actions">
+          <button id="btn-budget-exceeded-ok" class="btn btn--primary">Got it</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- app.js loaded with defer: runs after HTML is fully parsed,
+         before the DOMContentLoaded event fires in app.js itself. -->
+  <script src="app.js" defer></script>
+</body>
+
+</html>
