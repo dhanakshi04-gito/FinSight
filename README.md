@@ -13,36 +13,39 @@ FinSight Analytics is a personal finance management and data visualization syste
 - **Tools:** VS Code, Git, GitHub
 
 ## System Architecture
+## System Architecture
+
+```text
 FinSight/
 │
 ├── config/
-│   └── db.js                  # PostgreSQL database connection
+│   └── db.js
 │
 ├── middleware/
-│   └── apiKey.js              # API key authentication
+│   └── apiKey.js
 │
 ├── routes/
-│   └── transactions.js        # Transaction API endpoints
+│   └── transactions.js
 │
 ├── public/
-│   ├── styles.css             # Frontend styling
-│   └── logo.png               # Application logo
+│   ├── styles.css
+│   └── logo.png
 │
 ├── data/
-│   ├── test_data_2025.csv     # Sample transaction data
-│   └── test_data_2026.csv     # Sample transaction data
+│   ├── test_data_2025.csv
+│   └── test_data_2026.csv
 │
 ├── database/
-│   └── schema.sql             # Database table structure
+│   └── schema.sql
 │
-├── index.html                 # User interface
-├── app.js                     # Frontend logic and API requests
-├── server.js                  # Express server and application entry point
-│
-├── .gitignore                 # Git ignored files
-├── package.json               # Project dependencies
-├── package-lock.json          # Dependency versions
-└── README.md                  # Project documentation
+├── index.html
+├── app.js
+├── server.js
+├── .gitignore
+├── package.json
+├── package-lock.json
+└── README.md
+```
 
 ## Key Features
 1. Transaction Management
